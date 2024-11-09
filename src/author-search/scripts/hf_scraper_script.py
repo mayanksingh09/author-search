@@ -1,14 +1,25 @@
-import requests
-from bs4 import BeautifulSoup
 import json
-
 import PyPDF2
+import requests
 from io import BytesIO
+from bs4 import BeautifulSoup
+
 
 
 class HFPapersScraper:
+    """
+    Script to scrape papers from Hugging Face's papers page. 
+    AK: https://huggingface.co/akhaliq and community submitted papers
+    """
 
-    def get_paper_urls(self, date=None):
+    def get_paper_urls(self, date:str = None):
+        """
+        Get all the paper urls from the Hugging Face papers page.
+        Args:
+            date (str): The date to filter the papers by. Format: YYYY-MM-DD
+        Returns:
+            list: A list of paper urls
+        """
         
         base_url = "https://huggingface.co/papers"
         
@@ -33,12 +44,31 @@ class HFPapersScraper:
 
         return list(set(paper_urls))
     
-    def get_paper_ids(self, date=None):
+    def get_paper_ids(self, date: str = None):
+        """
+        Get all the paper ids from the Hugging Face papers page.
+        Args:
+            date (str): The date to filter the papers by. Format: YYYY-MM-DD
+        Returns:
+            list: A list of paper ids
+        """
+        
         paper_urls = self.get_paper_urls(date)
         paper_ids = [url.split('/')[-1] for url in paper_urls if len(url.split('/')[-1]) > 0]
+
         return paper_ids
 
     def get_arxiv_links(self, hf_papers_urls: list, type='pdf'):
+        """
+        Get the arxiv links for the papers on the Hugging Face papers page.
+        Parsing the actual HTML to extract it.
+        Quicker to just extract the id from the URL and append it to the arxiv URL.
+        Args:
+            hf_papers_urls (list): A list of Hugging Face paper urls
+            type (str): The type of arxiv link to get. Options: pdf, abs
+        Returns:
+            list: A list of arxiv links
+        """
 
         arxiv_paper_links = []
         for url in hf_papers_urls:
@@ -50,18 +80,4 @@ class HFPapersScraper:
         arxiv_paper_links = [link.replace('/abs/', f'/{type}/') for link in arxiv_paper_links]
 
         return arxiv_paper_links
-
-    # def get_pdf_content(self, pdf_url):
-    #     response = requests.get(pdf_url)
-    #     pdf = PyPDF2.PdfReader(BytesIO(response.content))
-    #     content = []
-    #     for page_num in range(len(pdf.pages)):
-    #         page = pdf.pages[page_num]
-    #         content.append(page.extract_text())
-    #     return content
-
-    # def get_html_content(self, arxiv_url):
-    #     response = requests.get(arxiv_url)
-    #     soup = BeautifulSoup(response.text, 'html.parser')
-    #     content = soup.get_text()
-    #     return content
+    
