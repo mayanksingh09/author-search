@@ -81,3 +81,4 @@ class HFPapersScraper:
 
         return arxiv_paper_links
     
+    # TODO: Add a method to tag the votes on each paper

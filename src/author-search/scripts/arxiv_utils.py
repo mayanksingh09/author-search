@@ -97,13 +97,21 @@ def get_content_by_author(author: str,
     Returns:
         str: The XML content of the arXiv papers
     """
+    # TODO: Figure out a way to make author name search accurate
+    #       currently it picks up first name or last name for multiword names 
+    #       and that's not accurate enough
 
-    if isinstance(author, list) and filter_type == "all":
-        author = "+AND+".join(f"au:{author}")
-    elif isinstance(author, list) and filter_type == "any":
-        author = "+OR+".join(f"au:{author}")
+
+    if isinstance(author, list):
+        author_list = [f"au:{author.lower().strip}" for author in author]
+        if filter_type == "all":
+            author = "+AND+".join(f"au:{author.strip().lower()}")
+        elif filter_type == "any":
+            author = "+OR+".join(f"au:{author.strip().lower()}")
+        else:
+            raise ValueError("Invalid filter type. Options: 'all', 'any'")
     else:
-        author = f"au:{author}"
+        author = f"au:{author.lower().strip()}"
 
     api_url = f"http://export.arxiv.org/api/query?{urlencode({'search_query': author})}"
     if print_url:
