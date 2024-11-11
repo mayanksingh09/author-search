@@ -198,6 +198,18 @@ def filter_content_by_exact_name(xml_content, relax_name=False):
 
 def format_author_name(author_name: str, 
                        use_initials: bool= False):
+    """
+    Format an author's name. 
+        Converts the name to the format: middlename_lastname_firstname
+        Or if use_initials is True: lastname_initial
+        In some special cases like names with 4+ parts or names with middle initials,
+            the output is lastname_firstname or lastname_initial
+    Args:
+        author_name (str): The author's name
+        use_initials (bool): Whether to use the author's initials
+    Returns:
+        str: The formatted author's name
+    """
     name_parts = author_name.strip().split(" ")
     if len(name_parts) == 3:
         # If the middle name is an initial, ignore it and use the first and last name only
