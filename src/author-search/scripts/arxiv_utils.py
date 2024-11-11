@@ -85,22 +85,18 @@ def get_content_by_topic(topic: Union[str, List[str]],
     
     return response.text
 
-def get_content_by_author(author: str, 
+def get_content_by_author(author: str,
                           filter_type: str = "all",
                           print_url: bool = False):
     """
     Get the content of arXiv papers by author.
     Args:
-        author (str or list): The author(s) to search for papers on arXiv
+        author (str or list): The author(s) to search for papers on arXiv. 
         filter_type (str): The filter type to use. Options: 'all', 'any'
         print_url (bool): Whether to print the URL used to get the papers
     Returns:
         str: The XML content of the arXiv papers
     """
-    # TODO: Figure out a way to make author name search accurate
-    #       currently it picks up first name or last name for multiword names 
-    #       and that's not accurate enough
-
 
     if isinstance(author, list):
         author_list = [f"au:{author.lower().strip}" for author in author]
@@ -160,10 +156,12 @@ def extract_paper_info(xml_string):
 
         papers_info = []
         for entry in entries:
-        
+            
+            # Extract the summary
             summary = entry.find('atom:summary', namespace)
             summary_text = summary.text.strip() if summary is not None else ""
             
+            # Extract the authors
             authors = entry.findall('atom:author', namespace)
             author_names = [
                 author.find('atom:name', namespace).text.strip()
@@ -171,13 +169,18 @@ def extract_paper_info(xml_string):
                 if author.find('atom:name', namespace) is not None
             ]
             
+            # Extract the title
             title = entry.find('atom:title', namespace)
             title_text = title.text.strip() if title is not None else ""
+
+            # Extract the primary category
+            primary_category = entry.find('atom:primary_category', namespace)
+            primary_category = primary_category.attrib['term'] if primary_category is not None else ""
 
             papers_info.append({
                 'title': title_text,
                 'authors': author_names,
-                'summary': summary_text
+                'summary': summary_text,
             })
 
         return papers_info
@@ -188,3 +191,38 @@ def extract_paper_info(xml_string):
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
+
+def filter_content_by_exact_name(xml_content, relax_name=False):
+    pass
+
+
+def format_author_name(author_name: str, 
+                       use_initials: bool= False):
+    name_parts = author_name.strip().split(" ")
+    if len(name_parts) == 3:
+        # If the middle name is an initial, ignore it and use the first and last name only
+        first_name, last_name = name_parts[0], f"{name_parts[1]}_{name_parts[2]}" if len(name_parts[1].replace('.', '')) > 1 else name_parts[2]
+    elif len(name_parts) == 2:
+        first_name, last_name = name_parts
+    elif len(name_parts) == 1:
+        first_name = ""
+        last_name = name_parts[0]
+        return last_name
+    else:
+        first_name = name_parts[0]
+        last_name = name_parts[-1]
+    
+    if use_initials:
+        initial = first_name[0] if first_name else ""
+
+    return f"{last_name}_{initial}" if use_initials else f"{last_name}_{first_name}"
+
+
+# TODOs:
+    # 1. Add primary category extraction to extract_paper_info
+        # More info on this here: https://arxiv.org/category_taxonomy
+    # 2. Add affiliation extraction to extract_paper_info
+    # 3. Add arxiv id to the extracted_paper_info
+    # 4. The names are still approximate, find a way to make them more accurate
+    # 5. Add other query parameters to function (currently only using search_query & id_list).
+    #       Add start, max_results (https://info.arxiv.org/help/api/user-manual.html#search_query_and_id_list)
